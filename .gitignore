@@ -1,0 +1,13 @@
+
+@eaDir
+*.csv
+*.mat
+*.xlsx
+*.pyc
+
+storage/
+
+*_MDTO_*
+*_MDTS_*
+*_MDTT_*
+

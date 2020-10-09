@@ -1,0 +1,76 @@
+model {
+	diffcoef[1] = -0.5
+	diffcoef[2] =  0.5
+
+	# Group 1 = Exercise
+	# Group 2 = Resting
+
+	# Pos = New
+	# Neg = Old
+
+	# Diff and mid for each parameter
+	alphagroupdiff ~ dnorm(0, 1/0.2^2)	
+	alphagroupmid ~ dnorm(0.05, 1/.2^2)
+
+	betagroupdiff ~ dnorm(0, 1/0.2^2)      
+	betagroupmid  ~ dnorm(0.5, 1/.2^2)T(0.01, 0.99)
+
+	taugroupdiff ~ dnorm(0, 1/0.2^2)
+	taugroupmid  ~ dnorm(0.5, 1/0.2^2)T(0.01, 1.99)
+
+	# Drift by condition
+	for (c in 1:4) {
+		deltagroupdiff[c] ~ dnorm(0, 1/0.2^2)	
+		deltagroupmid[c]  ~ dnorm(0, 1/0.2^2)
+	}
+
+	# Define each groups diff between timepoints
+	for (g in 1:2) {
+		alphadiff[g] = alphagroupmid + diffcoef[g]*alphagroupdiff
+		alphamid[g] ~ dnorm(0.05, 1/0.2^2) 
+
+		betadiff[g] = betagroupmid + diffcoef[g]*betagroupdiff
+		betamid[g]  ~ dnorm(.5, 1/0.2^2)T(0.01, 0.99)
+
+		taudiff[g] = taugroupmid + diffcoef[g]*taugroupdiff
+		taumid[g] ~ dnorm(.5, 1/0.2^2)T(0.01,1.99)
+
+		for (c in 1:4) {
+			deltadiff[g,c] = deltagroupmid[c] + diffcoef[g]*deltagroupdiff[c]
+			deltamid[g,c] ~ dnorm(0, 1/0.2^2)
+		}
+
+		for (p in 1:2) { # Pre/Post timepoints
+			alpha[g,p] = alphamid[g] + diffcoef[p]*alphadiff[g]
+			beta[g,p]  = betamid[g]  + diffcoef[p]*betadiff[g]
+			tau[g,p]   = taumid[g]   + diffcoef[p]*taudiff[g]
+
+			for (c in 1:4) {
+				delta[g,p,c,1] = deltamid[g,c] + diffcoef[p]*deltadiff[g,c]
+				delta[g,p,c,2] = 0
+			}
+		}
+
+	}
+
+	for (p in 1:2) {
+		for (s in 1:nSubjects) {
+			# trials in order, not separated by condition
+			for (tr in 1:nAllTrials) {
+				# using answer from that trial, adjust weiner variables
+
+				y[p,s,tr] ~ dwiener(alpha[groupList[s],p], tau[groupList[s],p], beta[groupList[s],p],delta[groupList[s],p, condList[p,s,tr], z[p,s,tr]+1])
+				# ypred is prediction of whether trial will be correct based on weiner model
+				ypred[p,s,tr] ~ dwiener(alpha[groupList[s],p], tau[groupList[s],p], beta[groupList[s],p],delta[groupList[s],p, condList[p,s,tr], z[p,s,tr]+1])
+
+				z[p,s,tr] ~ dbern(phi[p,s]) # guessing or not
+			}
+
+			phi[p,s] ~ dunif(0,1) # random proportion fed into guessing variable, updated based on their trial responses, fed into z
+
+		}
+
+	}
+
+}
+
