@@ -9,48 +9,60 @@ model {
 	# Neg = Old
 
 	# Diff and mid for each parameter
-	alphagroupdiff ~ dnorm(0, 1/0.2^2)	
-	alphagroupmid ~ dnorm(0.05, 1/.2^2)
+	alphagroupmudiff ~ dnorm(0, 1/0.2^2)	
+	alphagroupmumid ~ dnorm(0.2, 1/.2^2)T(0.001,)
 
-	betagroupdiff ~ dnorm(0, 1/0.2^2)      
-	betagroupmid  ~ dnorm(0.5, 1/.2^2)T(0.01, 0.99)
+	betagroupmudiff ~ dnorm(0, 1/0.2^2)      
+	betagroupmumid  ~ dnorm(0.5, 1/.2^2)T(0.001, 0.999)
 
-	taugroupdiff ~ dnorm(0, 1/0.2^2)
-	taugroupmid  ~ dnorm(0.5, 1/0.2^2)T(0.01, 1.99)
+	taugroupmudiff ~ dnorm(0, 1/0.2^2)
+	taugroupmumid  ~ dnorm(0.5, 1/0.2^2)T(0.001, 1.999)
 
-	# Drift by condition
 	for (c in 1:4) {
-		deltagroupdiff[c] ~ dnorm(0, 1/0.2^2)	
-		deltagroupmid[c]  ~ dnorm(0, 1/0.2^2)
+		deltagroupmudiff[c] ~ dnorm(0, 1/0.2^2)	
+		deltagroupmumid[c]  ~ dnorm(0, 1/0.2^2)
 	}
 
-	# Define each groups diff between timepoints
+	# Diff parameters
 	for (g in 1:2) {
-		alphadiff[g] = alphagroupmid + diffcoef[g]*alphagroupdiff
-		alphamid[g] ~ dnorm(0.05, 1/0.2^2) 
+		alphamudiff[g] = alphagroupmumid + diffcoef[g]*alphagroupmudiff
+		alphamumid[g] ~ dnorm(0.05, 1/0.2^2)T(0.001,)
 
-		betadiff[g] = betagroupmid + diffcoef[g]*betagroupdiff
-		betamid[g]  ~ dnorm(.5, 1/0.2^2)T(0.01, 0.99)
+		betamudiff[g] = betagroupmumid + diffcoef[g]*betagroupmudiff
+		betamumid[g]  ~ dnorm(.5, 1/0.2^2)T(0.001, 0.999)
 
-		taudiff[g] = taugroupmid + diffcoef[g]*taugroupdiff
-		taumid[g] ~ dnorm(.5, 1/0.2^2)T(0.01,1.99)
+		taumudiff[g] = taugroupmumid + diffcoef[g]*taugroupmudiff
+		taumumid[g] ~ dnorm(.5, 1/0.2^2)T(0.001,1.999)
 
 		for (c in 1:4) {
-			deltadiff[g,c] = deltagroupmid[c] + diffcoef[g]*deltagroupdiff[c]
-			deltamid[g,c] ~ dnorm(0, 1/0.2^2)
+			deltamudiff[g,c] = deltagroupmumid[c] + diffcoef[g]*deltagroupmudiff[c]
+			deltamumid[g,c] ~ dnorm(0, 1/0.2^2)
 		}
+	}
 
+	
+	# Group+Pre/Post parameters
+	for (g in 1:2) {
 		for (p in 1:2) { # Pre/Post timepoints
-			alpha[g,p] = alphamid[g] + diffcoef[p]*alphadiff[g]
-			beta[g,p]  = betamid[g]  + diffcoef[p]*betadiff[g]
-			tau[g,p]   = taumid[g]   + diffcoef[p]*taudiff[g]
+			alphamu[g,p] = alphamumid[g] + diffcoef[p]*alphamudiff[g]
+			alphasd[g,p] ~ dexp(.5)
+			alpha[g,p] ~ dnorm(alphamu[g,p], 1/alphasd[g,p]^2)T(0.001,)
+			
+			betamu[g,p]  = betamumid[g]  + diffcoef[p]*betamudiff[g]
+			betasd[g,p] ~ dexp(.5)
+			beta[g,p] ~ dnorm(betamu[g,p], 1/betasd[g,p]^2)T(0.001, 0.999)
+
+			taumu[g,p]   = taumumid[g]   + diffcoef[p]*taumudiff[g]
+			tausd[g,p] ~ dexp(.5)
+			tau[g,p] ~ dnorm(taumu[g,p], 1/tausd[g,p]^2)T(0.001, 1.999)
 
 			for (c in 1:4) {
-				delta[g,p,c,1] = deltamid[g,c] + diffcoef[p]*deltadiff[g,c]
+				deltamu[g,p,c] = deltamumid[g,c] + diffcoef[p]*deltamudiff[g,c]
+				deltasd[g,p,c] ~ dexp(.5)
+				delta[g,p,c,1] ~ dnorm(deltamu[g,p,c], 1/deltasd[g,p,c]^2)
 				delta[g,p,c,2] = 0
 			}
 		}
-
 	}
 
 	for (p in 1:2) {
