@@ -1,0 +1,96 @@
+model {
+	diffcoef[1] = -0.5
+	diffcoef[2] =  0.5
+
+	# Group 1 = Exercise
+	# Group 2 = Resting
+
+	# Pos = New
+	# Neg = Old
+
+	# Diff and mid for each parameter
+	alphagroupmudiff ~ dnorm(0, 1/0.2^2)	
+	alphagroupmumid ~ dnorm(0, 1/.2^2)
+
+	betagroupmudiff ~ dnorm(0, 1/0.2^2)      
+	betagroupmumid  ~ dnorm(0, 1/.2^2)
+
+	taugroupmudiff ~ dnorm(0, 1/0.2^2)
+	taugroupmumid  ~ dnorm(0, 1/0.2^2)
+
+	for (c in 1:4) {
+		deltagroupmudiff[c] ~ dnorm(0, 1/0.2^2)	
+		deltagroupmumid[c]  ~ dnorm(0, 1/0.2^2)
+	}
+
+	###### Diff parameters
+	for (g in 1:2) {
+		alphamudiff[g] = alphagroupmumid + diffcoef[g]*alphagroupmudiff
+		alphamumid[g] ~ dnorm(1.2, 1/0.2^2)T(0.001,)
+
+		betamudiff[g] = betagroupmumid + diffcoef[g]*betagroupmudiff
+		betamumid[g]  ~ dnorm(.5, 1/0.2^2)T(0.001, 0.999)
+
+		taumudiff[g] = taugroupmumid + diffcoef[g]*taugroupmudiff
+		taumumid[g] ~ dnorm(.5, 1/0.2^2)T(0.001,1.999)
+
+		for (c in 1:4) {
+			deltamudiff[g,c] = deltagroupmumid[c] + diffcoef[g]*deltagroupmudiff[c]
+			deltamumid[g,c] ~ dnorm(0, 1/0.2^2)
+		}
+	}
+	
+	###### Group parameters
+	for (g in 1:2) {
+		for (p in 1:2) { # Pre/Post timepoints
+			alphamu[g,p] = alphamumid[g] + diffcoef[p]*alphamudiff[g]
+			alphasd[g,p] ~ dexp(.5)
+			
+			betamu[g,p]  = betamumid[g]  + diffcoef[p]*betamudiff[g]
+			betasd[g,p] ~ dexp(.5)
+
+			taumu[g,p]   = taumumid[g] + diffcoef[p]*taumudiff[g]
+			tausd[g,p] ~ dexp(.5)
+			tau[g,p] ~ dnorm(taumu[g,p], 1/tausd[g,p]^2)T(0.001, 1.999)
+
+			for (c in 1:4) {
+				deltamu[g,p,c] = deltamumid[g,c] + diffcoef[p]*deltamudiff[g,c]
+				deltasd[g,p,c] ~ dexp(.5)
+				delta[g,p,c,1] ~ dnorm(deltamu[g,p,c], 1/deltasd[g,p,c]^2)
+				delta[g,p,c,2] = 0
+			}
+		}
+	}
+
+	###### Subject level parameters
+	for (p in 1:2) {
+		for (s in 1:nSubjects) {
+			alphasubj[p,s] ~ dnorm(alphamu[groupList[s],p], 1/alphasd[groupList[s],p]^2)T(0.001,)
+			betasubj[p,s]  ~ dnorm(betamu[groupList[s],p], 1/betasd[groupList[s],p]^2)T(0.001, 0.999)
+		}
+	}
+	
+
+
+	###### Update loop
+	for (p in 1:2) {
+		for (s in 1:nSubjects) {
+			# trials in order, not separated by condition
+			for (tr in 1:nAllTrials) {
+				# using answer from that trial, adjust weiner variables
+
+				y[p,s,tr] ~ dwiener(alphasubj[p,s], tau[groupList[s],p], betasubj[p,s],delta[groupList[s],p, condList[p,s,tr], z[p,s,tr]+1])
+				# ypred is prediction of whether trial will be correct based on weiner model
+				ypred[p,s,tr] ~ dwiener(alphasubj[p,s], tau[groupList[s],p], betasubj[p,s],delta[groupList[s],p, condList[p,s,tr], z[p,s,tr]+1])
+
+				z[p,s,tr] ~ dbern(phi[p,s]) # guessing or not
+			}
+
+			phi[p,s] ~ dunif(0,1) # random proportion fed into guessing variable, updated based on their trial responses, fed into z
+
+		}
+
+	}
+
+}
+
