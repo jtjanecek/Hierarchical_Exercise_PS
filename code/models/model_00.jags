@@ -10,13 +10,13 @@ model {
 
 	# Diff and mid for each parameter
 	alphagroupmudiff ~ dnorm(0, 1/0.2^2)	
-	alphagroupmumid ~ dnorm(0.2, 1/.2^2)T(0.001,)
+	alphagroupmumid ~ dnorm(0, 1/.2^2)
 
 	betagroupmudiff ~ dnorm(0, 1/0.2^2)      
-	betagroupmumid  ~ dnorm(0.5, 1/.2^2)T(0.001, 0.999)
+	betagroupmumid  ~ dnorm(0, 1/.2^2)
 
 	taugroupmudiff ~ dnorm(0, 1/0.2^2)
-	taugroupmumid  ~ dnorm(0.5, 1/0.2^2)T(0.001, 1.999)
+	taugroupmumid  ~ dnorm(0, 1/0.2^2)
 
 	for (c in 1:4) {
 		deltagroupmudiff[c] ~ dnorm(0, 1/0.2^2)	
@@ -26,7 +26,7 @@ model {
 	# Diff parameters
 	for (g in 1:2) {
 		alphamudiff[g] = alphagroupmumid + diffcoef[g]*alphagroupmudiff
-		alphamumid[g] ~ dnorm(0.05, 1/0.2^2)T(0.001,)
+		alphamumid[g] ~ dnorm(1.1, 1/0.05^2)T(0.001,)
 
 		betamudiff[g] = betagroupmumid + diffcoef[g]*betagroupmudiff
 		betamumid[g]  ~ dnorm(.5, 1/0.2^2)T(0.001, 0.999)
