@@ -9,6 +9,8 @@ tauMu
 tauDiffExercise
 tauDiffExerciseCarryover
 tauDiffControl
+tausd
+tauSubj
 betaMu
 betaDiffExercise
 betaDiffExerciseCarryover
@@ -19,4 +21,5 @@ deltaMu
 deltaDiffExercise
 deltaDiffExerciseCarryover
 deltaDiffControl
-delta
+deltasd
+deltaSubj

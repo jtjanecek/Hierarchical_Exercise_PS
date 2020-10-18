@@ -99,6 +99,8 @@ model {
 	for (p in 1:3) {
 		for (s in 1:nSubjects) {
 			alphaSubj[p,s] ~ dnorm(alphaMu[groupList[s],p], 1/alphasd[groupList[s],p]^2)T(0.001,)
+			betaSubj[p,s] ~ dnorm(betaMu[groupList[s],p], 1/betasd[groupList[s],p]^2)T(0.001,0.999)
+			tauSubj[p,s] ~ dnorm(tauMu[groupList[s],p], 1/tausd[groupList[s],p]^2)T(0.001, 1.999)
 		}
 	}
 
@@ -110,9 +112,9 @@ model {
 			for (tr in 1:nAllTrials) {
 				# using answer from that trial, adjust weiner variables
 
-				y[p,s,tr] ~ dwiener(alphaSubj[p,s], tauMu[groupList[s],p], betaMu[groupList[s],p],delta[groupList[s],p, condList[p,s,tr], z[p,s,tr]+1])
+				y[p,s,tr] ~ dwiener(alphaSubj[p,s], tauSubj[p,s], betaSubj[p,s],delta[groupList[s],p, condList[p,s,tr], z[p,s,tr]+1])
 				# ypred is prediction of whether trial will be correct based on weiner model
-				ypred[p,s,tr] ~ dwiener(alphaSubj[p,s], tauMu[groupList[s],p], betaMu[groupList[s],p],delta[groupList[s],p, condList[p,s,tr], z[p,s,tr]+1])
+				ypred[p,s,tr] ~ dwiener(alphaSubj[p,s], tauSubj[p,s], betaSubj[p,s],delta[groupList[s],p, condList[p,s,tr], z[p,s,tr]+1])
 
 				z[p,s,tr] ~ dbern(phi[p,s]) # guessing or not
 			}
