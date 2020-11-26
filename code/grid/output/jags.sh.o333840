@@ -1,0 +1,19 @@
+Welcome to JAGS 4.3.0 on Tue Nov 24 19:36:34 2020
+JAGS is free software and comes with ABSOLUTELY NO WARRANTY
+Loading module: basemod: ok
+Loading module: bugs: ok
+Loading module: dic: ok
+Loading module: wiener: ok
+Reading data file /tmp/yassamri2/Tsukuba/hierarchical/storage/model_07_C1/untitled.data
+Compiling model graph
+   Resolving undeclared variables
+   Allocating nodes
+Graph information:
+   Observed stochastic nodes: 13365
+   Unobserved stochastic nodes: 72417
+   Total graph size: 142956
+Reading parameter file /tmp/yassamri2/Tsukuba/hierarchical/storage/model_07_C1/untitled_2.init
+Reading parameter file /tmp/yassamri2/Tsukuba/hierarchical/storage/model_07_C1/untitled_2.seed
+Initializing model
+Updating 20000
+Updating 100000
